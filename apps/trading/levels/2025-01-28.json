@@ -1,0 +1,27 @@
+{
+  "date": "2025-01-28",
+  "levels": [
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 29100,
+      "type": "ED",
+      "action": "SELL",
+      "target_type": "TFU",
+      "target_price": 29000,
+      "stoploss": 29150,
+      "notes": "Easy Down - short on break below"
+    },
+    {
+      "index": "NIFTY",
+      "timeframe": "1m",
+      "price": 29000,
+      "type": "EU-S",
+      "action": "BUY",
+      "target_type": "TFD",
+      "target_price": 29100,
+      "stoploss": 28950,
+      "notes": "Easy Up Support - buy on bounce"
+    }
+  ]
+}

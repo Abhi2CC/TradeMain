@@ -1,0 +1,60 @@
+{
+  "date": "2025-04-01",
+  "levels": [
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 22725.35,
+      "type": "ED",
+      "action": "SELL",
+      "target_type": "TFU",
+      "target_price": 22525.35,
+      "stoploss": 22785.35,
+      "notes": "From chart: ED. Executable mapping generated from provided level stack."
+    },
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 22637.0,
+      "type": "ED 5 MINS",
+      "action": "SELL",
+      "target_type": "TFU",
+      "target_price": 22525.35,
+      "stoploss": 22725.35,
+      "notes": "From chart: ED 5 MINS."
+    },
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 22418.25,
+      "type": "EDRTZ",
+      "action": "SELL",
+      "target_type": "TFU",
+      "target_price": 22343.35,
+      "stoploss": 22465.35,
+      "notes": "From chart: EDRTZ treated as SELL trigger."
+    },
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 22343.35,
+      "type": "TFU/ED",
+      "action": "SELL",
+      "target_type": "TFU",
+      "target_price": 22286.1,
+      "stoploss": 22418.25,
+      "notes": "Contains ED; treated as SELL trigger."
+    },
+    {
+      "index": "NIFTY",
+      "timeframe": "5m",
+      "price": 22100.35,
+      "type": "TFU/ED/EU",
+      "action": "BUY",
+      "target_type": "TFU",
+      "target_price": 22286.1,
+      "stoploss": 22040.35,
+      "notes": "Mixed ED/EU label; mapped as BUY support trigger for execution."
+    }
+  ]
+}

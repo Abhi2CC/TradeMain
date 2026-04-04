@@ -1,0 +1,26 @@
+{
+  "patterns": [
+    {
+      "id": "BULLISH_BREAK",
+      "description": "Strong bullish candle breaking above level",
+      "rules": {
+        "close_gt_open": true,
+        "body_pct_min": 60,
+        "upper_wick_pct_max": 20,
+        "lower_wick_pct_max": 20,
+        "close_gt_level": true
+      }
+    },
+    {
+      "id": "BEARISH_BREAK",
+      "description": "Strong bearish candle breaking below level",
+      "rules": {
+        "open_gt_close": true,
+        "body_pct_min": 60,
+        "upper_wick_pct_max": 20,
+        "lower_wick_pct_max": 20,
+        "close_lt_level": true
+      }
+    }
+  ]
+}

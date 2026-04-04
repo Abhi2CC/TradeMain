@@ -1,0 +1,10 @@
+kiteconnect
+python-dotenv
+sqlalchemy
+websocket-client
+pandas
+numpy
+colorama
+tabulate
+schedule
+pytest

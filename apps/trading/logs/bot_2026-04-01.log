@@ -1,0 +1,19 @@
+{"timestamp": "2026-03-31T19:47:42.522933", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=True"}
+{"timestamp": "2026-03-31T19:47:43.018573", "level": "INFO", "logger": "core.engine", "message": "Subscribed 11 tokens"}
+{"timestamp": "2026-03-31T19:59:24.462910", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=True"}
+{"timestamp": "2026-03-31T19:59:24.722127", "level": "INFO", "logger": "core.engine", "message": "Subscribed 11 tokens"}
+{"timestamp": "2026-03-31T20:00:04.287603", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=True"}
+{"timestamp": "2026-03-31T20:00:04.585334", "level": "INFO", "logger": "core.engine", "message": "Subscribed 11 tokens"}
+{"timestamp": "2026-04-01T07:59:58.139722", "level": "WARNING", "logger": "auth.kite_auth", "message": "Session validation failed: Incorrect `api_key` or `access_token`."}
+{"timestamp": "2026-04-01T08:01:14.898105", "level": "WARNING", "logger": "core.engine", "message": "Stale market data: no tick for 78 seconds"}
+{"timestamp": "2026-04-01T08:01:14.898475", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=True"}
+{"timestamp": "2026-04-01T08:01:15.315301", "level": "INFO", "logger": "core.engine", "message": "Subscribed 19 tokens"}
+{"timestamp": "2026-04-01T08:01:53.834930", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=False"}
+{"timestamp": "2026-04-01T08:01:54.111131", "level": "INFO", "logger": "core.engine", "message": "Subscribed 19 tokens"}
+{"timestamp": "2026-04-01T08:05:18.056733", "level": "INFO", "logger": "core.engine", "message": "Open positions: 0"}
+{"timestamp": "2026-04-01T08:05:22.958763", "level": "INFO", "logger": "core.engine", "message": "Realized PnL: 0.0 | Trades: 0"}
+{"timestamp": "2026-04-01T08:06:18.297409", "level": "INFO", "logger": "core.engine", "message": "Levels reloaded"}
+{"timestamp": "2026-04-01T08:35:33.688043", "level": "INFO", "logger": "core.engine", "message": "Levels reloaded"}
+{"timestamp": "2026-04-01T08:35:55.257834", "level": "INFO", "logger": "core.engine", "message": "Trading engine initialized. DRY_RUN=False"}
+{"timestamp": "2026-04-01T08:35:55.806166", "level": "INFO", "logger": "core.engine", "message": "Subscribed 19 tokens"}
+{"timestamp": "2026-04-01T08:52:21.444385", "level": "INFO", "logger": "core.engine", "message": "Realized PnL: 0.0 | Trades: 0"}

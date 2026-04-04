@@ -1,0 +1,16 @@
+{
+  "date": "2025-04-01",
+  "fund_allocation": {
+    "NIFTY": 20000,
+    "BANKNIFTY": 15000,
+    "FINNIFTY": 0
+  },
+  "strike_prices": {
+    "NIFTY": [29050, 29100, 29150, 29200],
+    "BANKNIFTY": [48500, 48600, 48700, 48800],
+    "FINNIFTY": []
+  },
+  "max_trades_before_lock": 2,
+  "max_candles": 10,
+  "max_daily_loss": 5000
+}
