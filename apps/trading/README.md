@@ -6,8 +6,10 @@ Production-oriented modular bot scaffold for Zerodha Kite Connect intraday index
 
 1. `pip install -r requirements.txt`
 2. `copy .env.example .env` and fill credentials
-3. Edit `config/daily_config.json`, `config/candle_patterns.json`, and `levels/YYYY-MM-DD.json`
-4. `python main.py`
+3. Run [apps/Api](../Api) (MongoDB + `LEVELS_API_URL` in `.env`). Edit levels in [apps/Web](../Web) or via API.
+4. Set `LEVELS_API_URL` (and optional `LEVELS_API_KEY`) in `.env`. `daily_config.json` `date` must match the day stored in Mongo.
+5. Edit `config/daily_config.json` and `config/candle_patterns.json`. Optional fallback: `levels/YYYY-MM-DD.json` if API is down.
+6. `python main.py`
 
 ## Safety defaults
 

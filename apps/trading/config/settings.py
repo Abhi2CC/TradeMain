@@ -20,6 +20,8 @@ class Settings:
     max_candles_default: int = int(os.getenv('MAX_CANDLES_DEFAULT', '10'))
     eod_squareoff_time: str = os.getenv('EOD_SQUAREOFF_TIME', '15:15')
     dry_run: bool = os.getenv('DRY_RUN', 'true').lower() == 'true'
+    levels_api_url: str = os.getenv('LEVELS_API_URL', '').strip().rstrip('/')
+    levels_api_key: str = os.getenv('LEVELS_API_KEY', '').strip()
 
 LOT_SIZES = {'NIFTY': 75, 'BANKNIFTY': 30, 'FINNIFTY': 65}
 INDEX_EXCHANGE_SYMBOLS = {
