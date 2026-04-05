@@ -1,6 +1,14 @@
+# Dependencies & build
 node_modules/
 dist/
+
+# Environment & secrets (any directory)
 .env
+.env.*
+!.env.example
+!**/.env.example
+
+# Logs & caches
 *.log
 __pycache__/
 .pytest_cache/
