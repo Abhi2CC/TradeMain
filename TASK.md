@@ -10,3 +10,9 @@
 - [ ] Add persistence for daily summaries in DB tables.
 - [x] Levels API (Node + Mongo) in `apps/Api`, React UI in `apps/Web`, bot fetches via `LEVELS_API_URL`.
 - [x] Add persistence for missed trades in DB tables.
+- [x] Wire `apps/trading` bot to use `GET /api/v1/kite/request-token` for session bootstrap when cache/env token is missing or stale.
+
+## Completed (session)
+
+- [x] 2026-04-05: Kite login URL + request token APIs (`KiteAuthState` Mongo model) and **Kite login** tab in `apps/Web`.
+- [x] 2026-04-05: Dashboard JWT auth (`POST /api/v1/auth/login`) + dark **SQUARE OFF | ALGORYX.IO** UI in `apps/Web`.
