@@ -3,7 +3,16 @@ import Dashboard from "./components/Dashboard.jsx";
 import LoginPage from "./components/LoginPage.jsx";
 import { clearSessionToken, getSessionToken, setSessionToken } from "./lib/session.js";
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:3001";
+/** Empty base = same-origin (e.g. Docker nginx proxy). "same" / "." also mean relative. */
+function resolveApiBase() {
+  const v = import.meta.env.VITE_API_URL;
+  if (v === undefined || v === null) return "http://localhost:3001";
+  const s = String(v).trim().replace(/\/$/, "");
+  if (s === "" || s === "same" || s === ".") return "";
+  return s;
+}
+
+const API_BASE = resolveApiBase();
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
 /** Default true: show id/password login first unless VITE_REQUIRE_LOGIN=false (or 0). */

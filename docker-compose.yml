@@ -1,0 +1,100 @@
+# Production stack: MongoDB, Levels API, Web (nginx + SPA), optional trading bot.
+# Usage:
+#   cp env.docker.example .env
+#   # Edit .env with secrets (never commit .env)
+#   docker compose up -d --build
+#   docker compose --profile bot up -d --build   # include scalping bot
+
+name: tradeking
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: tradeking
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://127.0.0.1:27017/test", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - internal
+
+  api:
+    build:
+      context: ./apps/Api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "3001"
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/tradeking}
+      API_KEY: ${API_KEY:-}
+      DASHBOARD_USER_ID: ${DASHBOARD_USER_ID:-}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
+      WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-}
+      KITE_API_KEY: ${KITE_API_KEY:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "3001"
+    networks:
+      - internal
+  web:
+    build:
+      context: ./apps/Web
+      dockerfile: Dockerfile
+      args:
+        # same = browser calls /api/* on same host (nginx proxies to api service)
+        VITE_API_URL: ${VITE_API_URL:-same}
+        VITE_API_KEY: ${VITE_API_KEY:-}
+        VITE_REQUIRE_LOGIN: ${VITE_REQUIRE_LOGIN:-true}
+    restart: unless-stopped
+    ports:
+      - "${WEB_PUBLISH_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+  trading:
+    profiles:
+      - bot
+    build:
+      context: ./apps/trading
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      LEVELS_API_URL: http://api:3001
+      LEVELS_API_KEY: ${API_KEY:-}
+      KITE_API_KEY: ${KITE_API_KEY:-}
+      KITE_API_SECRET: ${KITE_API_SECRET:-}
+      KITE_ACCESS_TOKEN: ${KITE_ACCESS_TOKEN:-}
+      KITE_ACCESS_DATE: ${KITE_ACCESS_DATE:-}
+      DB_PATH: /app/storage/scalping_bot.db
+      KITE_TOKEN_CACHE_PATH: /app/storage/kite_token_cache.json
+      LOG_LEVEL: ${BOT_LOG_LEVEL:-INFO}
+      DRY_RUN: ${BOT_DRY_RUN:-true}
+      EOD_SQUAREOFF_TIME: ${BOT_EOD_SQUAREOFF_TIME:-15:15}
+    volumes:
+      - trading_storage:/app/storage
+      - trading_logs:/app/logs
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  trading_storage:
+  trading_logs:

@@ -29,5 +29,10 @@ INDEX_EXCHANGE_SYMBOLS = {
     "BANKNIFTY": "NSE:NIFTY BANK",
     "FINNIFTY": "NSE:NIFTY FIN SERVICE",
 }
-TOKEN_CACHE_FILE = ROOT_DIR / "auth" / "token_cache.json"
+_token_cache_override = os.getenv("KITE_TOKEN_CACHE_PATH", "").strip()
+TOKEN_CACHE_FILE = (
+    Path(_token_cache_override)
+    if _token_cache_override
+    else ROOT_DIR / "auth" / "token_cache.json"
+)
 settings = Settings()
