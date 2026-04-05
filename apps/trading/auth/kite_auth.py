@@ -13,13 +13,12 @@ logger = logging.getLogger(__name__)
 API_TIMEOUT_SEC = 30
 
 
-def fetch_kite_request_token(api_base_url: str, api_key: str | None = None) -> str:
+def fetch_kite_request_token(api_base_url: str) -> str:
     """
     Load the latest Kite ``request_token`` saved via TradeKing API (Mongo).
 
     Args:
-        api_base_url (str): Base URL of the Levels API (e.g. ``http://localhost:3001``).
-        api_key (str | None): Optional ``X-API-Key`` if the API enforces ``API_KEY``.
+        api_base_url (str): TradeKing API base URL (e.g. ``http://localhost:3001``).
 
     Returns:
         str: Non-empty request token.
@@ -29,13 +28,11 @@ def fetch_kite_request_token(api_base_url: str, api_key: str | None = None) -> s
     """
     base = api_base_url.strip().rstrip("/")
     if not base:
-        raise RuntimeError("LEVELS_API_URL is empty; cannot fetch Kite request_token from API.")
+        raise RuntimeError(
+            "TradeKing API base URL is empty; set TRADEKING_API_URL or LEVELS_API_URL (e.g. http://localhost:3001)."
+        )
     url = f"{base}/api/v1/kite/request-token"
-    headers: dict[str, str] = {}
-    key = (api_key or "").strip()
-    if key:
-        headers["X-API-Key"] = key
-    req = Request(url, headers=headers, method="GET")
+    req = Request(url, method="GET")
     try:
         with urlopen(req, timeout=API_TIMEOUT_SEC) as resp:
             body = resp.read().decode("utf-8")
@@ -57,23 +54,29 @@ def fetch_kite_request_token(api_base_url: str, api_key: str | None = None) -> s
     return token
 
 
-def try_fetch_kite_request_token(api_base_url: str, api_key: str | None = None) -> str | None:
+def try_fetch_kite_request_token(api_base_url: str) -> str | None:
     """
-    Same as ``fetch_kite_request_token`` but returns ``None`` on any failure (logs, no raise).
+    GET request_token from TradeKing API (Mongo). Returns ``None`` on any failure (logs only).
 
     Args:
-        api_base_url (str): Base URL of the Levels API.
-        api_key (str | None): Optional ``X-API-Key``.
+        api_base_url (str): TradeKing API base URL.
 
     Returns:
         str | None: Token string, or ``None`` if missing or unreachable.
     """
     if not (api_base_url or "").strip():
+        logger.warning(
+            "Kite: no TRADEKING_API_URL — skipping GET /api/v1/kite/request-token (Mongo)."
+        )
         return None
+    logger.info(
+        "Kite: fetching request_token from API (Mongo) GET %s/api/v1/kite/request-token",
+        api_base_url.strip().rstrip("/"),
+    )
     try:
-        return fetch_kite_request_token(api_base_url, api_key)
+        return fetch_kite_request_token(api_base_url)
     except RuntimeError as exc:
-        logger.info("Kite request_token not loaded from API: %s", exc)
+        logger.warning("Kite: request_token not loaded from API — %s", exc)
         return None
 
 
@@ -89,7 +92,6 @@ class KiteAuth:
         session = self.kite.generate_session(request_token, api_secret=self.api_secret)
         self.kite.set_access_token(session['access_token'])
         os.environ['KITE_ACCESS_TOKEN'] = session['access_token']
-        os.environ['KITE_ACCESS_DATE'] = str(date.today())
         TOKEN_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         TOKEN_CACHE_FILE.write_text(
             json.dumps({"access_token": session["access_token"], "access_date": str(date.today())}),
@@ -106,17 +108,14 @@ class KiteAuth:
 
     def bootstrap(self) -> KiteConnect:
         # 1) Prefer a request_token from the TradeKing API (Web Kite tab) before file/env cache.
-        request_token = try_fetch_kite_request_token(
-            settings.levels_api_url,
-            settings.levels_api_key or None,
-        )
+        request_token = try_fetch_kite_request_token(settings.api_base_url)
         if request_token:
             try:
                 self.generate_session(request_token)
                 if self.validate_session():
                     logger.info(
                         "Kite session established via GET %s/api/v1/kite/request-token",
-                        settings.levels_api_url.strip().rstrip("/") or "(api)",
+                        settings.api_base_url.strip().rstrip("/") or "(api)",
                     )
                     return self.kite
             except Exception as exc:
@@ -125,20 +124,21 @@ class KiteAuth:
                     exc,
                 )
 
-        token = settings.kite_access_token
-        token_date = settings.kite_access_date
-        if TOKEN_CACHE_FILE.exists():
+        token = (settings.kite_access_token or "").strip()
+        token_source = "KITE_ACCESS_TOKEN (.env)" if token else ""
+        if not token and TOKEN_CACHE_FILE.exists():
             try:
                 cached = json.loads(TOKEN_CACHE_FILE.read_text(encoding="utf-8"))
-                token = token or cached.get("access_token", "")
-                token_date = token_date or cached.get("access_date", "")
+                token = (cached.get("access_token") or "").strip()
+                if token:
+                    token_source = str(TOKEN_CACHE_FILE)
             except json.JSONDecodeError:
                 logger.warning("Ignoring malformed token cache")
 
-        if token and token_date == str(date.today()):
+        if token:
             self.kite.set_access_token(token)
             if self.validate_session():
-                logger.info("Kite session from cached access token for today")
+                logger.info("Kite session from %s (validated via profile)", token_source or "cache")
                 return self.kite
 
         login_url = self.get_login_url()
@@ -146,5 +146,5 @@ class KiteAuth:
         print(f"Login URL: {login_url}")
         raise RuntimeError(
             "No valid Kite session. Save a fresh request_token in apps/Web (Kite login), "
-            "ensure the API returns it at GET /api/v1/kite/request-token, set LEVELS_API_URL, then restart."
+            "ensure the API returns it at GET /api/v1/kite/request-token, set TRADEKING_API_URL, then restart."
         )

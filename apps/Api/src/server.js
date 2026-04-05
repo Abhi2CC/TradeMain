@@ -2,7 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import { protectApiRoutes } from "./middleware/auth.js";
 import { authRouter } from "./routes/auth.js";
 import { kiteRouter } from "./routes/kite.js";
 import { levelsRouter } from "./routes/levels.js";
@@ -25,8 +24,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/levels", protectApiRoutes, levelsRouter);
-app.use("/api/v1/kite", protectApiRoutes, kiteRouter);
+// Levels + Kite data routes: no API key (bot uses TRADEKING_API_URL only).
+app.use("/api/v1/levels", levelsRouter);
+app.use("/api/v1/kite", kiteRouter);
 
 async function main() {
   await mongoose.connect(MONGODB_URI);

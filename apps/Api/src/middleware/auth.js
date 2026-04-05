@@ -67,8 +67,8 @@ export async function signDashboardJwt() {
 }
 
 /**
- * Protect /api/v1/* when API_KEY and/or dashboard login is configured.
- * Allows X-API-Key (bot/scripts) or Bearer dashboard JWT (web).
+ * Optional middleware: X-API-Key (API_KEY) or Bearer dashboard JWT.
+ * Not mounted on `/levels` or `/kite` in server.js (bot uses base URL only).
  */
 export async function protectApiRoutes(req, res, next) {
   try {

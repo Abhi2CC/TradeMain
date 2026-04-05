@@ -47,13 +47,10 @@ class TradingEngine:
         daily = json.loads((ROOT_DIR / "config" / "daily_config.json").read_text(encoding="utf-8"))
         patterns = json.loads((ROOT_DIR / "config" / "candle_patterns.json").read_text(encoding="utf-8"))["patterns"]
         date_str = daily["date"]
-        level_fallback = ROOT_DIR / "levels" / f"{date_str}.json"
 
         self.levels = LevelManager(
             date_str=date_str,
-            api_base_url=settings.levels_api_url or None,
-            api_key=settings.levels_api_key or None,
-            fallback_file=level_fallback,
+            api_base_url=settings.api_base_url or None,
         )
         self.levels.load()
         self.signals = SignalGenerator(patterns=patterns, max_candles=daily.get("max_candles", settings.max_candles_default))

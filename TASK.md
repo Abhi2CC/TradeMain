@@ -9,7 +9,7 @@
 
 - [x] Wire full live event loop in `core/engine.py` with `KiteTicker` callbacks and CLI command loop.
 - [ ] Add persistence for daily summaries in DB tables.
-- [x] Levels API (Node + Mongo) in `apps/Api`, React UI in `apps/Web`, bot fetches via `LEVELS_API_URL`.
+- [x] Levels API (Node + Mongo) in `apps/Api`, React UI in `apps/Web`; bot uses `TRADEKING_API_URL` only for `/levels` + `/kite/request-token` (no API key; no local `levels/*.json` fallback).
 - [x] Add persistence for missed trades in DB tables.
 - [x] Wire `apps/trading` bot to use `GET /api/v1/kite/request-token` for session bootstrap when cache/env token is missing or stale.
 

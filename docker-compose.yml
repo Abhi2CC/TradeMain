@@ -32,7 +32,6 @@ services:
     environment:
       PORT: "3001"
       MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/tradeking}
-      API_KEY: ${API_KEY:-}
       DASHBOARD_USER_ID: ${DASHBOARD_USER_ID:-}
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
       WEB_SESSION_SECRET: ${WEB_SESSION_SECRET:-}
@@ -70,12 +69,10 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      LEVELS_API_URL: http://api:3001
-      LEVELS_API_KEY: ${API_KEY:-}
+      TRADEKING_API_URL: http://api:3001
       KITE_API_KEY: ${KITE_API_KEY:-}
       KITE_API_SECRET: ${KITE_API_SECRET:-}
       KITE_ACCESS_TOKEN: ${KITE_ACCESS_TOKEN:-}
-      KITE_ACCESS_DATE: ${KITE_ACCESS_DATE:-}
       DB_PATH: /app/storage/scalping_bot.db
       KITE_TOKEN_CACHE_PATH: /app/storage/kite_token_cache.json
       LOG_LEVEL: ${BOT_LOG_LEVEL:-INFO}
