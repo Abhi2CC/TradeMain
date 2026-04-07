@@ -26,6 +26,8 @@ class Settings:
     log_level: str = os.getenv('LOG_LEVEL', 'INFO')
     max_trades_before_lock: int = int(os.getenv('MAX_TRADES_BEFORE_LOCK', '2'))
     max_candles_default: int = int(os.getenv('MAX_CANDLES_DEFAULT', '10'))
+    market_start_time: str = os.getenv('MARKET_START_TIME', '09:15')
+    market_end_time: str = os.getenv('MARKET_END_TIME', '15:30')
     eod_squareoff_time: str = os.getenv('EOD_SQUAREOFF_TIME', '15:15')
     dry_run: bool = os.getenv('DRY_RUN', 'true').lower() == 'true'
     api_base_url: str = _read_tradeking_api_base_url()

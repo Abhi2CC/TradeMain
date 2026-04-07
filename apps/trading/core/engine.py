@@ -46,7 +46,7 @@ class TradingEngine:
 
         daily = json.loads((ROOT_DIR / "config" / "daily_config.json").read_text(encoding="utf-8"))
         patterns = json.loads((ROOT_DIR / "config" / "candle_patterns.json").read_text(encoding="utf-8"))["patterns"]
-        date_str = daily["date"]
+        date_str = datetime.now().date().isoformat()
 
         self.levels = LevelManager(
             date_str=date_str,
@@ -60,6 +60,7 @@ class TradingEngine:
         self.latest_index_prices: dict[str, float] = {}
 
     def start(self) -> None:
+        self._wait_for_market_start()
         self.kite = self.auth.bootstrap()
         self.order_executor = OrderExecutor(self.kite)
         self._load_instrument_cache()
@@ -78,6 +79,9 @@ class TradingEngine:
                 logger.warning("EOD squareoff time reached, exiting all positions")
                 self.emergency_exit_all(reason="EOD_SQUAREOFF")
                 self.eod_done = True
+            if self._is_after_market_end(datetime.now()):
+                logger.info("Market end reached (%s). Stopping engine.", settings.market_end_time)
+                self.running = False
             time_mod.sleep(1)
         self.stop()
 
@@ -118,6 +122,10 @@ class TradingEngine:
 
     def on_signal(self, signal) -> None:
         """Validate signal with risk and execution constraints, then place order."""
+        if not self._is_within_trading_window(datetime.now()):
+            self.missed.add(signal, "OUTSIDE_WINDOW")
+            logger.info("Signal blocked (OUTSIDE_WINDOW): %s", signal)
+            return
         allowed, reason = self.risk.can_trade()
         if not allowed:
             self.missed.add(signal, "AUTO_LOCKED")
@@ -227,11 +235,43 @@ class TradingEngine:
     def _watchdog_loop(self) -> None:
         while self.running:
             now = datetime.now()
-            if time(9, 15) <= now.time() <= time(15, 30):
+            if self._is_within_trading_window(now):
                 stale = (now - self.last_tick_at).total_seconds()
                 if stale > 30:
                     logger.warning("Stale market data: no tick for %.0f seconds", stale)
             time_mod.sleep(5)
+
+    @staticmethod
+    def _parse_hhmm(value: str) -> time:
+        h, m = value.split(":")
+        return time(hour=int(h), minute=int(m))
+
+    def _is_within_trading_window(self, now: datetime) -> bool:
+        t = now.time()
+        return self._parse_hhmm(settings.market_start_time) <= t <= self._parse_hhmm(settings.market_end_time)
+
+    def _is_after_market_end(self, now: datetime) -> bool:
+        return now.time() > self._parse_hhmm(settings.market_end_time)
+
+    def _wait_for_market_start(self) -> None:
+        while True:
+            now = datetime.now()
+            start_time = self._parse_hhmm(settings.market_start_time)
+            end_time = self._parse_hhmm(settings.market_end_time)
+            if now.time() >= end_time:
+                raise RuntimeError(
+                    f"Current time {now.strftime('%H:%M')} is after MARKET_END_TIME {settings.market_end_time}. "
+                    "Start bot during the configured trading day."
+                )
+            if now.time() >= start_time:
+                return
+            wait_seconds = int((datetime.combine(now.date(), start_time) - now).total_seconds())
+            logger.info(
+                "Waiting for market start %s (about %ss)...",
+                settings.market_start_time,
+                max(wait_seconds, 1),
+            )
+            time_mod.sleep(min(max(wait_seconds, 1), 30))
 
     def _check_crash_recovery_positions(self) -> None:
         try:

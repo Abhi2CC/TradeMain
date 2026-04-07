@@ -41,6 +41,30 @@ def test_level_manager_loads_from_api(mock_urlopen: MagicMock) -> None:
     assert len(lm.active_levels("NIFTY", "1m")) == 1
 
 
+@patch("core.level_manager.urlopen")
+def test_level_manager_date_mismatch_starts_empty(mock_urlopen: MagicMock) -> None:
+    """Response date mismatch should not be used for trading levels."""
+    mock_urlopen.return_value = _mock_urlopen_response(
+        {
+            "date": "2025-01-02",
+            "levels": [
+                {
+                    "index": "NIFTY",
+                    "timeframe": "1m",
+                    "price": 100,
+                    "type": "EU-S",
+                    "action": "BUY",
+                    "target_price": 110,
+                    "stoploss": 95,
+                }
+            ],
+        }
+    )
+    lm = LevelManager(date_str="2025-01-01", api_base_url="http://localhost:3001")
+    lm.load()
+    assert lm.levels == []
+
+
 def test_level_manager_no_api_url_starts_empty() -> None:
     """Missing base URL does not raise; levels stay empty."""
     lm = LevelManager(date_str="2099-01-01", api_base_url=None)

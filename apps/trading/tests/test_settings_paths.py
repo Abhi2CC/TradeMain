@@ -87,3 +87,25 @@ def test_api_base_url_falls_back_to_levels_url() -> None:
         text=True,
     )
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_market_window_defaults() -> None:
+    """Default market window uses 09:15-15:30."""
+    env = os.environ.copy()
+    env.pop("MARKET_START_TIME", None)
+    env.pop("MARKET_END_TIME", None)
+    prog = (
+        "import importlib; "
+        "import config.settings as s; "
+        "importlib.reload(s); "
+        "assert s.settings.market_start_time == '09:15'; "
+        "assert s.settings.market_end_time == '15:30'"
+    )
+    r = subprocess.run(
+        [sys.executable, "-c", prog],
+        cwd=str(_TRADING_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr

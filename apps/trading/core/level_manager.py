@@ -90,6 +90,15 @@ class LevelManager:
                     exc,
                 )
 
+        response_date = str(data.get("date") or "").strip()
+        if response_date and response_date != self.date_str:
+            logger.warning(
+                "Levels date mismatch: expected %s, got %s — using 0 levels.",
+                self.date_str,
+                response_date,
+            )
+            data = {"levels": []}
+
         self.levels = list(data.get("levels") or [])
         for level in self.levels:
             level.setdefault("status", "ACTIVE")

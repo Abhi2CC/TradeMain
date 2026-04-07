@@ -77,6 +77,8 @@ services:
       KITE_TOKEN_CACHE_PATH: /app/storage/kite_token_cache.json
       LOG_LEVEL: ${BOT_LOG_LEVEL:-INFO}
       DRY_RUN: ${BOT_DRY_RUN:-true}
+      MARKET_START_TIME: ${BOT_MARKET_START_TIME:-09:15}
+      MARKET_END_TIME: ${BOT_MARKET_END_TIME:-15:30}
       EOD_SQUAREOFF_TIME: ${BOT_EOD_SQUAREOFF_TIME:-15:15}
     volumes:
       - trading_storage:/app/storage
