@@ -29,6 +29,11 @@ class Settings:
     market_start_time: str = os.getenv('MARKET_START_TIME', '09:15')
     market_end_time: str = os.getenv('MARKET_END_TIME', '15:30')
     eod_squareoff_time: str = os.getenv('EOD_SQUAREOFF_TIME', '15:15')
+    mongo_events_enabled: bool = os.getenv('MONGO_EVENTS_ENABLED', 'false').lower() == 'true'
+    mongo_events_uri: str = os.getenv('MONGO_EVENTS_URI', '')
+    mongo_events_db: str = os.getenv('MONGO_EVENTS_DB', 'tradeking')
+    mongo_events_collection: str = os.getenv('MONGO_EVENTS_COLLECTION', 'bot_events')
+    mongo_events_batch_size: int = int(os.getenv('MONGO_EVENTS_BATCH_SIZE', '100'))
     dry_run: bool = os.getenv('DRY_RUN', 'true').lower() == 'true'
     api_base_url: str = _read_tradeking_api_base_url()
 

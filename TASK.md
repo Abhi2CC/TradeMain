@@ -4,6 +4,7 @@
 
 - [x] 2026-04-05: Production Dockerfiles + root `docker-compose.yml` for Api, Web, trading, MongoDB (`env.docker.example`).
 - [x] 2026-04-01: Build production-grade index options scalping bot in `apps/trading` using Kite Connect.
+- [x] 2026-04-08: Persist all bot logs/events to MongoDB from `apps/trading` (best-effort async sink, no impact on existing SQLite/file logs).
 
 ## Discovered During Work
 

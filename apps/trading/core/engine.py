@@ -5,6 +5,7 @@ import threading
 import time as time_mod
 
 from analytics.missed_trade_tracker import MissedTradeTracker
+from analytics.mongo_event_logger import get_mongo_event_logger
 from analytics.trade_logger import log_trade
 from analytics.report_generator import generate_report
 from auth.kite_auth import KiteAuth
@@ -23,6 +24,7 @@ from data.tick_handler import TickHandler
 from storage.db import init_db
 
 logger = logging.getLogger(__name__)
+mongo_events = get_mongo_event_logger()
 
 
 class TradingEngine:
@@ -61,6 +63,7 @@ class TradingEngine:
 
     def start(self) -> None:
         self._wait_for_market_start()
+        mongo_events.event("BOT_STARTING", {"dry_run": settings.dry_run})
         self.kite = self.auth.bootstrap()
         self.order_executor = OrderExecutor(self.kite)
         self._load_instrument_cache()
@@ -74,13 +77,16 @@ class TradingEngine:
         threading.Thread(target=self._cli_loop, daemon=True).start()
 
         logger.info("Trading engine initialized. DRY_RUN=%s", settings.dry_run)
+        mongo_events.event("BOT_STARTED", {"dry_run": settings.dry_run})
         while self.running:
             if not self.eod_done and self.is_eod_squareoff(datetime.now()):
                 logger.warning("EOD squareoff time reached, exiting all positions")
+                mongo_events.event("EOD_SQUAREOFF_TRIGGERED", {"time": datetime.now().isoformat()})
                 self.emergency_exit_all(reason="EOD_SQUAREOFF")
                 self.eod_done = True
             if self._is_after_market_end(datetime.now()):
                 logger.info("Market end reached (%s). Stopping engine.", settings.market_end_time)
+                mongo_events.event("BOT_STOP_MARKET_END", {"market_end_time": settings.market_end_time})
                 self.running = False
             time_mod.sleep(1)
         self.stop()
@@ -91,6 +97,8 @@ class TradingEngine:
             self.tick_handler.kws.close()
         report = generate_report(self.closed_positions, self.missed.missed, ROOT_DIR / "logs")
         logger.info("Engine stopped. Report: %s", report)
+        mongo_events.event("BOT_STOPPED", {"closed_positions": len(self.closed_positions), "missed_signals": len(self.missed.missed)})
+        mongo_events.stop()
 
     def is_eod_squareoff(self, now: datetime) -> bool:
         h, m = settings.eod_squareoff_time.split(":")
@@ -125,14 +133,17 @@ class TradingEngine:
         if not self._is_within_trading_window(datetime.now()):
             self.missed.add(signal, "OUTSIDE_WINDOW")
             logger.info("Signal blocked (OUTSIDE_WINDOW): %s", signal)
+            mongo_events.event("SIGNAL_BLOCKED", {"reason": "OUTSIDE_WINDOW", "index": signal.index, "timeframe": signal.timeframe})
             return
         allowed, reason = self.risk.can_trade()
         if not allowed:
             self.missed.add(signal, "AUTO_LOCKED")
             logger.info("Signal blocked (%s): %s", reason, signal)
+            mongo_events.event("SIGNAL_BLOCKED", {"reason": reason, "index": signal.index, "timeframe": signal.timeframe})
             return
         if self.position_manager.has_open_for_index(signal.index):
             self.missed.add(signal, "DUPLICATE_POSITION")
+            mongo_events.event("SIGNAL_BLOCKED", {"reason": "DUPLICATE_POSITION", "index": signal.index, "timeframe": signal.timeframe})
             return
 
         strike_info = select_optimal_strike(
@@ -145,6 +156,7 @@ class TradingEngine:
         )
         if not strike_info:
             self.missed.add(signal, "NO_FUNDS")
+            mongo_events.event("SIGNAL_BLOCKED", {"reason": "NO_FUNDS", "index": signal.index, "timeframe": signal.timeframe})
             return
 
         order_id = self.order_executor.place_entry_order(signal, strike_info)
@@ -158,6 +170,16 @@ class TradingEngine:
         )
         signal.status = "EXECUTED"
         logger.info("Position opened: %s", position.id)
+        mongo_events.event(
+            "POSITION_OPENED",
+            {
+                "position_id": position.id,
+                "index": signal.index,
+                "timeframe": signal.timeframe,
+                "tradingsymbol": strike_info["tradingsymbol"],
+                "quantity": strike_info["lots"] * LOT_SIZES[signal.index],
+            },
+        )
 
     def _exit_position(self, position, reason: str) -> None:
         """Exit a position and update realized PnL."""
@@ -172,6 +194,15 @@ class TradingEngine:
         log_trade(position)
         self.risk.record_trade(position.pnl or 0)
         logger.info("Position closed: %s reason=%s pnl=%s", position.id, reason, position.pnl)
+        mongo_events.event(
+            "POSITION_CLOSED",
+            {
+                "position_id": position.id,
+                "reason": reason,
+                "pnl": position.pnl,
+                "tradingsymbol": position.tradingsymbol,
+            },
+        )
 
     def emergency_exit_all(self, reason: str = "MANUAL") -> None:
         """Kill switch: close all open positions immediately."""
@@ -210,18 +241,23 @@ class TradingEngine:
         if tokens:
             self.tick_handler.subscribe_full(tokens)
             logger.info("Subscribed %s tokens", len(tokens))
+            mongo_events.event("WS_CONNECTED", {"subscribed_tokens": len(tokens)})
 
     def _on_close(self, ws, code, reason) -> None:
         logger.warning("WebSocket closed code=%s reason=%s", code, reason)
+        mongo_events.event("WS_CLOSED", {"code": code, "reason": str(reason)})
 
     def _on_error(self, ws, code, reason) -> None:
         logger.error("WebSocket error code=%s reason=%s", code, reason)
+        mongo_events.event("WS_ERROR", {"code": code, "reason": str(reason)})
 
     def _on_order_update(self, ws, data) -> None:
         logger.info("Order update: %s", data)
+        mongo_events.event("ORDER_UPDATE", {"data": data})
 
     def _on_ticks(self, ws, ticks: list[dict]) -> None:
         self.last_tick_at = datetime.now()
+        mongo_events.event("WS_TICKS", {"count": len(ticks)})
         for tick in ticks:
             token = int(tick.get("instrument_token", 0))
             index = self.index_token_to_name.get(token)

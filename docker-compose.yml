@@ -80,6 +80,11 @@ services:
       MARKET_START_TIME: ${BOT_MARKET_START_TIME:-09:15}
       MARKET_END_TIME: ${BOT_MARKET_END_TIME:-15:30}
       EOD_SQUAREOFF_TIME: ${BOT_EOD_SQUAREOFF_TIME:-15:15}
+      MONGO_EVENTS_ENABLED: ${BOT_MONGO_EVENTS_ENABLED:-false}
+      MONGO_EVENTS_URI: ${BOT_MONGO_EVENTS_URI:-mongodb://mongo:27017}
+      MONGO_EVENTS_DB: ${BOT_MONGO_EVENTS_DB:-tradeking}
+      MONGO_EVENTS_COLLECTION: ${BOT_MONGO_EVENTS_COLLECTION:-bot_events}
+      MONGO_EVENTS_BATCH_SIZE: ${BOT_MONGO_EVENTS_BATCH_SIZE:-100}
     volumes:
       - trading_storage:/app/storage
       - trading_logs:/app/logs

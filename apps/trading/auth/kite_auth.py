@@ -6,9 +6,11 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from kiteconnect import KiteConnect
+from analytics.mongo_event_logger import get_mongo_event_logger
 from config.settings import TOKEN_CACHE_FILE, settings
 
 logger = logging.getLogger(__name__)
+mongo_events = get_mongo_event_logger()
 
 API_TIMEOUT_SEC = 30
 
@@ -97,6 +99,7 @@ class KiteAuth:
             json.dumps({"access_token": session["access_token"], "access_date": str(date.today())}),
             encoding="utf-8",
         )
+        mongo_events.event("KITE_SESSION_GENERATED", {"access_date": str(date.today())})
 
     def validate_session(self) -> bool:
         try:
@@ -117,6 +120,7 @@ class KiteAuth:
                         "Kite session established via GET %s/api/v1/kite/request-token",
                         settings.api_base_url.strip().rstrip("/") or "(api)",
                     )
+                    mongo_events.event("KITE_BOOTSTRAP_SUCCESS", {"source": "api_request_token"})
                     return self.kite
             except Exception as exc:
                 logger.warning(
@@ -139,10 +143,12 @@ class KiteAuth:
             self.kite.set_access_token(token)
             if self.validate_session():
                 logger.info("Kite session from %s (validated via profile)", token_source or "cache")
+                mongo_events.event("KITE_BOOTSTRAP_SUCCESS", {"source": token_source or "cache"})
                 return self.kite
 
         login_url = self.get_login_url()
         logger.error("No valid Kite session. Save request_token via Web (Kite login). Login URL: %s", login_url)
+        mongo_events.event("KITE_BOOTSTRAP_FAILED", {"reason": "no_valid_session"})
         print(f"Login URL: {login_url}")
         raise RuntimeError(
             "No valid Kite session. Save a fresh request_token in apps/Web (Kite login), "

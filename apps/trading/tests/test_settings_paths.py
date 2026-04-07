@@ -89,17 +89,39 @@ def test_api_base_url_falls_back_to_levels_url() -> None:
     assert r.returncode == 0, r.stdout + r.stderr
 
 
-def test_market_window_defaults() -> None:
-    """Default market window uses 09:15-15:30."""
+def test_market_window_env_override() -> None:
+    """Market window should follow explicit env values."""
     env = os.environ.copy()
-    env.pop("MARKET_START_TIME", None)
-    env.pop("MARKET_END_TIME", None)
+    env["MARKET_START_TIME"] = "09:15"
+    env["MARKET_END_TIME"] = "15:30"
     prog = (
         "import importlib; "
         "import config.settings as s; "
         "importlib.reload(s); "
         "assert s.settings.market_start_time == '09:15'; "
         "assert s.settings.market_end_time == '15:30'"
+    )
+    r = subprocess.run(
+        [sys.executable, "-c", prog],
+        cwd=str(_TRADING_ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_mongo_events_defaults_disabled() -> None:
+    """Mongo event sink is disabled by default."""
+    env = os.environ.copy()
+    env.pop("MONGO_EVENTS_ENABLED", None)
+    env.pop("MONGO_EVENTS_URI", None)
+    prog = (
+        "import importlib; "
+        "import config.settings as s; "
+        "importlib.reload(s); "
+        "assert s.settings.mongo_events_enabled is False; "
+        "assert s.settings.mongo_events_uri == ''"
     )
     r = subprocess.run(
         [sys.executable, "-c", prog],

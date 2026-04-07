@@ -17,3 +17,9 @@ Production-oriented modular bot scaffold for Zerodha Kite Connect intraday index
 - Orders are MARKET + MIS and options BUY-only flow is enforced by strategy signal mapping.
 - Trading window is configurable via `.env` (`MARKET_START_TIME`, `MARKET_END_TIME`); entries are blocked outside this range.
 - EOD squareoff time is configurable via `.env`.
+
+## MongoDB bot events (optional)
+
+- Enable with `MONGO_EVENTS_ENABLED=true` and set `MONGO_EVENTS_URI`.
+- Collection defaults: `MONGO_EVENTS_DB=tradeking`, `MONGO_EVENTS_COLLECTION=bot_events`.
+- Existing file logs and SQLite analytics remain unchanged; Mongo logging is best-effort and non-blocking.
